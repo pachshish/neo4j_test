@@ -102,7 +102,7 @@ def get_all_bluetooth_users():
 def get_connected_devices():
     query = """
     MATCH (d1:Device)-[c:CONNECTED]->(d2:Device)
-    WHERE c.signal_strength_dbm > 60
+    WHERE c.signal_strength_dbm > -60
     RETURN d1.id AS device1_id, d1.name AS device1_name, 
            d2.id AS device2_id, d2.name AS device2_name, 
            c.signal_strength_dbm
@@ -112,13 +112,8 @@ def get_connected_devices():
             result = session.run(query)
             devices = []
             for record in result:
-                devices.append({
-                    "device1_id": record["device1_id"],
-                    "device1_name": record["device1_name"],
-                    "device2_id": record["device2_id"],
-                    "device2_name": record["device2_name"],
-                    "signal_strength_dbm": record["signal_strength_dbm"]
-                })
+                devices.append(dict(record))
+
             return jsonify(devices)
     except Exception as e:
         print(f"Error: {e}")

@@ -1,11 +1,18 @@
 services:
   neo4j:
     image: neo4j:latest
+    container_name: neo4j
     ports:
       - "7474:7474"
       - "7687:7687"
     environment:
-      - NEO4J_AUTH=neo4j_fails/password  # Replace 'password' with your desired password
+      - NEO4J_AUTH=neo4j/password
     volumes:
       - neo4j_data:/data
       - neo4j_logs:/logs
+
+volumes:
+  neo4j_data:
+    driver: local  # Local volume for storing Neo4j data
+  neo4j_logs:
+    driver: local  # Local volume for storing Neo4j logs

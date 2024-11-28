@@ -6,10 +6,10 @@ app = Flask(__name__)
 
 app.register_blueprint(phonesBP)
 
-@app.route("/api/phone_tracker", methods=['POST'])
-def get_interaction():
-   print(request.json)
-   return jsonify({ }), 200
+# @app.route("/api/phone_tracker", methods=['POST'])
+# def get_interaction():
+#    print(request.json)
+#    return jsonify({ }), 200
 
 
 if __name__ == "__main__":

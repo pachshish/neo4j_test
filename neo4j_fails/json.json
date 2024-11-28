@@ -1,0 +1,40 @@
+{
+  "devices": [
+    {
+      "id": "a54a9fb6-d32a-4f46-a46a-88e6a8b2fda6",
+      "name": "Carly",
+      "brand": "Armstrong and Sons",
+      "model": "Manager Would",
+      "os": "DoorOS 1.9",
+      "location": {
+        "latitude": 42.6314835,
+        "longitude": -179.733765,
+        "altitude_meters": 758,
+        "accuracy_meters": 18
+      }
+    },
+    {
+      "id": "5492d571-7d56-484d-bf93-fc72cf9dd7cb",
+      "name": "Joseph",
+      "brand": "Williams Ltd",
+      "model": "Enough From",
+      "os": "ManagementOS 9.6",
+      "location": {
+        "latitude": 12.2128625,
+        "longitude": -59.416436,
+        "altitude_meters": 3941,
+        "accuracy_meters": 14
+      }
+    }
+  ],
+  "interaction": {
+    "from_device": "a54a9fb6-d32a-4f46-a46a-88e6a8b2fda6",
+    "to_device": "5492d571-7d56-484d-bf93-fc72cf9dd7cb",
+    "method": "WiFi",
+    "bluetooth_version": "5.3",
+    "signal_strength_dbm": -61,
+    "distance_meters": 3.71,
+    "duration_seconds": 94,
+    "timestamp": "2000-12-20T22:22:26"
+  }
+}

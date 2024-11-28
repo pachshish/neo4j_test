@@ -1,5 +1,8 @@
 from flask import Blueprint, jsonify, request
-from neo4j_service import process_interaction, driver, get_connected_devices
+
+from neo4j_fails.neo4j_service import get_all_bluetooth_users, get_fetch_most_recent_interaction
+from neo4j_service import process_interaction, driver, get_connected_devices, get_count_device_connections, \
+    get_check_direct_connection
 
 phonesBP = Blueprint('phones', __name__)
 
@@ -13,50 +16,41 @@ def get_interaction():
 
 
 @phonesBP.route("/find_bluetooth", methods=['GET'])
-def get_all_bluetooth_users():
-    query = """
-    MATCH (start:Device)
-    MATCH (end:Device)
-    WHERE start <> end
-    MATCH path = shortestPath((start)-[:CONNECTED*]->(end))
-    WHERE ALL(r IN relationships(path) WHERE r.method = 'Bluetooth')
-    WITH path, length(path) as pathLength
-    ORDER BY pathLength DESC
-    LIMIT 1
-    RETURN length(path)
-    """
-    with driver.session() as session:
-        result = session.run(query)
-        users_with_bluetooth_devices = [record for record in result]
-
-    return jsonify(users_with_bluetooth_devices), 200
-
+def all_bluetooth_users():
+   result = get_all_bluetooth_users()
+   return result
 
 
 # יצירת Route ב-Flask
 @phonesBP.route('/connected_devices', methods=['GET'])
 def connected_devices():
     devices = get_connected_devices()
-    return jsonify(devices)
+    return devices
 
 
 @phonesBP.route('/device/<device_id>/connections', methods=['GET'])
 def count_device_connections(device_id):
+    result = get_count_device_connections(device_id)
+    return result
 
-    query = """
-    MATCH (d:Device {id: $device_id})-[r:CONNECTED]-(other:Device)
-    RETURN count(other) AS connection_count
-    """
-    try:
-        with driver.session() as session:
-            result = session.run(query, device_id=device_id)
-            count = result.single()["connection_count"]
+@phonesBP.route('/devices/connection', methods=['GET'])
+def check_direct_connection():
 
-        return jsonify({
-            "device_id": device_id,
-            "connection_count": count
-        }), 200
+    device1_id = request.args.get('device1_id')
+    device2_id = request.args.get('device2_id')
 
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    result = get_check_direct_connection(device1_id, device2_id)
+    return result
+#     http://localhost:5000/devices/connection?device1_id=a54a9fb6-d32a-4f46-a46a-88e6a8b2fda6&device2_id=5492d571-7d56-484d-bf93-fc72cf9dd7cb
+# שתי יוזרים שמחוברים
+
+@phonesBP.route('/device/most_recent_interaction', methods=['GET'])
+def fetch_most_recent_interaction():
+    device_id = request.args.get('device_id')
+    result = get_fetch_most_recent_interaction(device_id)
+    return result
+
+
+
+
 

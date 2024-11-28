@@ -1,3 +1,5 @@
+from flask import jsonify
+
 from neo4j_fails.init_db import init_neo4j
 
 driver = init_neo4j()
@@ -75,6 +77,28 @@ def process_interaction(data):
         session.run(query, **params)
 
 
+def get_all_bluetooth_users():
+    query = """
+    MATCH (start:Device)
+    MATCH (end:Device)
+    WHERE start <> end
+    MATCH path = shortestPath((start)-[:CONNECTED*]->(end))
+    WHERE ALL(r IN relationships(path) WHERE r.method = 'Bluetooth')
+    WITH path, length(path) as pathLength
+    ORDER BY pathLength DESC
+    LIMIT 1
+    RETURN length(path)
+    """
+    try:
+        with driver.session() as session:
+            result = session.run(query)
+            users_with_bluetooth_devices = [record for record in result]
+            return jsonify(users_with_bluetooth_devices), 200
+
+    except Exception as e:
+        print(f"Error: {e}")
+
+
 def get_connected_devices():
     query = """
     MATCH (d1:Device)-[c:CONNECTED]->(d2:Device)
@@ -95,7 +119,86 @@ def get_connected_devices():
                     "device2_name": record["device2_name"],
                     "signal_strength_dbm": record["signal_strength_dbm"]
                 })
-            return devices
+            return jsonify(devices)
     except Exception as e:
         print(f"Error: {e}")
+
+def get_count_device_connections(device_id):
+    query = """
+       MATCH (d:Device {id: $device_id})-[r:CONNECTED]-(other:Device)
+       RETURN count(other) AS connection_count
+       """
+    try:
+        with driver.session() as session:
+            result = session.run(query, device_id=device_id)
+            count = result.single()["connection_count"]
+
+        return jsonify({
+            "device_id": device_id,
+            "connection_count": count
+        }), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+def get_check_direct_connection(device1_id, device2_id):
+    if not device1_id or not device2_id:
+        return jsonify({"error": "Both device1_id and device2_id are required"}), 400
+
+    query = """
+    MATCH (d1:Device {id: $device1_id})-[r:CONNECTED]-(d2:Device {id: $device2_id})
+    RETURN count(r) > 0 AS is_connected
+    """
+    try:
+        with driver.session() as session:
+            result = session.run(query, device1_id=device1_id, device2_id=device2_id)
+            is_connected = result.single()["is_connected"]
+
+        return jsonify({
+            "device1_id": device1_id,
+            "device2_id": device2_id,
+            "is_connected": is_connected
+        }), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+def get_fetch_most_recent_interaction(device_id):
+    if not device_id:
+        return jsonify({"error": "Device ID is required"}), 400
+
+    query = """
+        MATCH (d:Device {id: $device_id})-[r:CONNECTED]->(other:Device)
+        RETURN other, r
+        ORDER BY r.timestamp DESC
+        LIMIT 1
+    """
+
+    with driver.session() as session:
+        result = session.run(query, device_id=device_id)
+        record = result.single()
+
+        if record is None:
+            return jsonify({"message": "No interactions found for the specified device"}), 404
+
+        interaction = record["r"]
+        connected_device = record["other"]
+
+        return jsonify({
+            "device_id": device_id,
+            "connected_device": {
+                "id": connected_device["id"],
+                "name": connected_device["name"],
+                "brand": connected_device["brand"],
+                "model": connected_device["model"]
+            },
+            "interaction_details": {
+                "method": interaction["method"],
+                "bluetooth_version": interaction["bluetooth_version"],
+                "signal_strength_dbm": interaction["signal_strength_dbm"],
+                "distance_meters": interaction["distance_meters"],
+                "duration_seconds": interaction["duration_seconds"],
+                "timestamp": interaction["timestamp"]
+            }
+        })
 

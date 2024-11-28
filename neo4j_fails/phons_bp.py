@@ -6,7 +6,7 @@ from neo4j_service import process_interaction, driver, get_connected_devices, ge
 
 phonesBP = Blueprint('phones', __name__)
 
-
+#קבלת הנתונים מהסימולטור
 @phonesBP.route("/api/phone_tracker", methods=['POST'])
 def get_interaction():
     data = request.json
@@ -14,25 +14,26 @@ def get_interaction():
     process_interaction(data)  # שלח את המידע ל-Neo4j
     return jsonify({"message": "Interaction processed"}), 200
 
-
+#מציאת הקישור על ידי בלוטוס הכי ארוך
 @phonesBP.route("/find_bluetooth", methods=['GET'])
 def all_bluetooth_users():
    result = get_all_bluetooth_users()
    return result
 
 
-# יצירת Route ב-Flask
+# מציאת הטלפונים שמהירות הקליטה שלהם גבוהה מ-60
 @phonesBP.route('/connected_devices', methods=['GET'])
 def connected_devices():
     devices = get_connected_devices()
     return devices
 
-
+#מציאת כמות החיבורים לטלפון מסויים
 @phonesBP.route('/device/<device_id>/connections', methods=['GET'])
 def count_device_connections(device_id):
     result = get_count_device_connections(device_id)
     return result
 
+# בדיקת חיבור ישיר בין שתי טלפונים
 @phonesBP.route('/devices/connection', methods=['GET'])
 def check_direct_connection():
 
@@ -44,6 +45,7 @@ def check_direct_connection():
 #     http://localhost:5000/devices/connection?device1_id=a54a9fb6-d32a-4f46-a46a-88e6a8b2fda6&device2_id=5492d571-7d56-484d-bf93-fc72cf9dd7cb
 # שתי יוזרים שמחוברים
 
+#מציאת הזמן האחרון של שיחה בטלפון ספציפי
 @phonesBP.route('/device/most_recent_interaction', methods=['GET'])
 def fetch_most_recent_interaction():
     device_id = request.args.get('device_id')

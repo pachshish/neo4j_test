@@ -102,7 +102,7 @@ def get_all_bluetooth_users():
 def get_connected_devices():
     query = """
     MATCH (d1:Device)-[c:CONNECTED]->(d2:Device)
-    WHERE c.signal_strength_dbm > -60
+    WHERE c.signal_strength_dbm > 60
     RETURN d1.id AS device1_id, d1.name AS device1_name, 
            d2.id AS device2_id, d2.name AS device2_name, 
            c.signal_strength_dbm
